@@ -8,7 +8,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher.filters import Text
 from data_base import sqlite_db
-
+import admin
 # import client
 
 storage = MemoryStorage()
@@ -16,7 +16,7 @@ storage = MemoryStorage()
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=storage)
 # client.register_handlers_client(dp)
-
+admin.register_handlers_client(dp)
 
 async def on_startup(_):
     print("Я запустился!")
@@ -54,6 +54,7 @@ async def keyboard_handler_menu(message: types.Message):
         case "📦Каталог":
             await message.delete()
             await message.answer("Здесь будет каталог", reply_markup=keyboard)
+            await sqlite_db.sql_read(message)
         case "ℹ️Помощь":
             await message.delete()
             await message.answer(text=result, reply_markup=ReplyKeyboardRemove())
@@ -153,6 +154,7 @@ async def load_address(message: types.Message, state: FSMContext):
     #     await message.reply(str(data))
     await sqlite_db.sql_add_command(state)
     await state.finish()
+
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
