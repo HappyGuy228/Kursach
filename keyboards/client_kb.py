@@ -11,9 +11,9 @@ kb_client_menu = ReplyKeyboardMarkup(resize_keyboard=True)
 
 kb_client_menu.row(b1, b2).row(b4, b5).row(b3, b6)
 
-b12 = KeyboardButton('Имя')
-b22 = KeyboardButton('Телефон')
-b32 = KeyboardButton('Адрес')
+b12 = KeyboardButton('Регистрация')
+b22 = KeyboardButton('Данные')
+b32 = KeyboardButton('Удалить')
 b42 = KeyboardButton('Назад')
 
 kb_client_settings = ReplyKeyboardMarkup(resize_keyboard=True)

@@ -1,8 +1,8 @@
 import sqlite3 as sq
-from bot import dp
-from bot import bot
+from create_bot import bot
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
+ID = None
 
 def sql_start():
     global base, cur
@@ -11,16 +11,15 @@ def sql_start():
     if base:
         print('Data base connected OK!')
     base.execute('CREATE TABLE IF NOT EXISTS user(user_id INT PRIMARY KEY, name TEXT, phone TEXT, address TEXT)')
-    base.execute('CREATE TABLE IF NOT EXISTS katalog(photo TEXT, product_id TEXT PRIMARY KEY, name TEXT, size TEXT, price TEXT)')
+    base.execute('CREATE TABLE IF NOT EXISTS katalog(product_id TEXT PRIMARY KEY, photo TEXT, name TEXT, size TEXT, price TEXT)')
     base.execute('CREATE TABLE IF NOT EXISTS reviews(product_id TEXT PRIMARY KEY, review LONGTEXT)')
     base.commit()
 
 
 async def sql_add_command_user(state):
     async with state.proxy() as data:
-        cur.execute('INSERT INTO user VALUES (?, ?, ?)', tuple(data.values()))
+        cur.execute('INSERT INTO user VALUES (?, ?, ?, ?)', tuple(data.values()))
         base.commit()
-
 
 async def sql_add_command_katalog(state):
     async with state.proxy() as data1:
@@ -41,6 +40,24 @@ async def check_product_id(product_id):
     else:
         return False
 
+async def check_user_exist(id):
+    result = cur.execute(f"SELECT * FROM user WHERE user_id = '{id}'").fetchone()
+    if result is not None:
+        return True
+    else:
+        return False
+
+async def sql_read_user(message):
+    # result_set = cur.execute(f"SELECT * FROM user WHERE user_id = '{ID}'").fetchone()
+    # for row in result_set:
+    #     user_id, name, phone, address = row
+    #     await bot.send_message(ID, text=f'ID: {user_id}\nИмя: {name}\nНомер: {phone}\nАдрес: {address}')
+    for ret in cur.execute(f"SELECT * FROM user WHERE user_id = '{message.from_user.id}'").fetchall():
+        await bot.send_message(message.from_user.id, f'Имя: {ret[1]}\nТелефон: {ret[2]}\nАдрес: {ret[3]}')
+
+async def sql_delete_user(message):
+    cur.execute(f'DELETE FROM user WHERE user_id={message.from_user.id}')
+    base.commit()
 
 async def sql_read_katalog(message):
     result_set = cur.execute('SELECT * FROM katalog').fetchall()
