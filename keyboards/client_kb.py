@@ -25,4 +25,4 @@ b124 = KeyboardButton('Написать отзыв')
 
 kb_client_review = ReplyKeyboardMarkup(resize_keyboard=True)
 
-kb_client_review.row(b123, b124)
+kb_client_review.row(b123, b124).add(b42)

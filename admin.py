@@ -6,6 +6,7 @@ from data_base import sqlite_db
 
 
 class FSMAdmin1(StatesGroup):
+    product_id = State()
     photo = State()
     name = State()
     size = State()
@@ -15,18 +16,16 @@ class FSMAdmin1(StatesGroup):
 # Работа с загрузкой товаров. Подключение к БД. Потом привяжем к кнопкам, настроим доступы и тд :Р
 # @dp.message_handler(commands='Загрузить1', state=None)
 async def cm_start(message: types.Message):
-    await FSMAdmin1.photo.set()
-    await message.reply('Загрузите фото.')
+    await FSMAdmin1.product_id.set()
+    await message.reply('Введите ID товара.')
 
 
-# @dp.message_handler(state="*", commands='отмена')
-# @dp.message_handler(Text(equals='отмена', ignore_case=True), state="*")
-# async def cancel_handler(message: types.Message, state: FSMContext):
-#     current_state = await state.get_state()
-#     if current_state is None:
-#         return
-#     await state.finish()
-#     await message.reply('OK')
+# @dp.message_handler(state=FSMAdmin1.product_id)
+async def load_product_id(message: types.Message, state: FSMContext):
+    async with state.proxy() as data1:
+        data1['product_id'] = message.text
+    await FSMAdmin1.next()
+    await message.reply("Загрузите фото")
 
 
 # @dp.message_handler(content_types=['photo'], state=FSMAdmin1.photo)
@@ -56,15 +55,14 @@ async def load_size(message: types.Message, state: FSMContext):
 # @dp.message_handler(state=FSMAdmin1.price)
 async def load_price(message: types.Message, state: FSMContext):
     async with state.proxy() as data1:
-        data1['price'] = int(message.text)
-    # async with state.proxy() as data:
-    #     await message.reply(str(data))
-    await sqlite_db.sql_add_command1(state)
+        data1['price'] = message.text
+    await sqlite_db.sql_add_command_katalog(state)
     await state.finish()
 
 
 def register_handlers_client(dp: Dispatcher):
     dp.register_message_handler(cm_start, commands=['Загрузить1'], state=None)
+    dp.register_message_handler(load_product_id, state=FSMAdmin1.product_id)
     dp.register_message_handler(load_photo, content_types=['photo'], state=FSMAdmin1.photo)
     dp.register_message_handler(load_name, state=FSMAdmin1.name)
     dp.register_message_handler(load_size, state=FSMAdmin1.size)
