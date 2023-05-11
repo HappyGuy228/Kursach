@@ -4,12 +4,15 @@ from aiogram.types import ReplyKeyboardRemove
 from inline import keyboard
 from data_base import sqlite_db
 from create_bot import dp, bot
+from aiogram.dispatcher.filters import Text
 import admin
 import client
 
 client.register_handlers_client_user(dp)
 client.register_handlers_client_review(dp)
-admin.register_handlers_admin(dp)
+admin.register_handlers_admin1(dp)
+admin.register_handlers_admin2(dp)
+
 
 async def on_startup(_):
     print("Я запустился!")
@@ -41,19 +44,24 @@ async def process_start_command(message: types.Message):
     await message.answer(text=result)
 
 
+@dp.message_handler(commands='empty')
+async def cart_empty(message: types.Message):
+    await sqlite_db.empty_cart(message)
+
+
 @dp.message_handler(lambda message: message.text in ['📦Каталог', 'ℹ️Помощь', '🛒Корзина', '📝Заказы', '⚙️Настройки', '💬Отзывы'])
 async def keyboard_handler_menu(message: types.Message):
     match message.text:
         case "📦Каталог":
             await message.delete()
             await message.answer("Здесь будет каталог", reply_markup=keyboard)
-            await sqlite_db.sql_read_katalog(message)
         case "ℹ️Помощь":
             await message.delete()
             await message.answer(text=result, reply_markup=ReplyKeyboardRemove())
         case "🛒Корзина":
             await message.delete()
             await message.answer("Здесь будет корзина")
+            await sqlite_db.sql_read_cart(message)
         case "📝Заказы":
             await message.delete()
             await message.answer("Здесь будут заказы")
@@ -83,13 +91,6 @@ async def keyboard_handler_settings(message: types.Message):
         case "Регистрация":
             await message.delete()
             await message.answer("Здесь будет Имя")
-            # username = message.from_user.first_name
-            # await message.answer(f"Ваше имя: {username}\n"
-            #                      "Хотите поменять? Тогда запишите новое: ")
-            # @dp.message_handler()
-            # async def help(message: types.Message):
-            #     username = message.text
-            #     await message.answer(f'Новое имя: {username}', reply_markup=kb_client_settings)
         case "Данные":
             await message.delete()
             await sqlite_db.sql_read_user(message)
@@ -106,7 +107,12 @@ async def keyboard_handler_settings(message: types.Message):
 async def process_category(callback_query: types.CallbackQuery):
     category = callback_query.data
     await bot.answer_callback_query(callback_query.id)
-    await callback_query.message.reply(f'Это {category}!')
+    await sqlite_db.sql_read_catalog(callback_query, category)
+
+
+@dp.callback_query_handler(Text(startswith='add '))
+async def add_cart(callback: types.CallbackQuery):
+    await sqlite_db.add_to_cart(callback)
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
