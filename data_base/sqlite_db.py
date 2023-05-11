@@ -43,14 +43,6 @@ async def sql_add_command_category(state):
         base.commit()
 
 
-async def check_product_id(product_id):
-    result = cur.execute(f"SELECT * FROM catalog WHERE product_id = '{product_id}'").fetchone()
-    if result is not None:
-        return True
-    else:
-        return False
-
-
 async def check_category(category_name):
     result = cur.execute(f"SELECT * FROM categories WHERE category_name = '{category_name}'").fetchone()
     if result is not None:
@@ -96,69 +88,10 @@ async def sql_read_reviews(message):
         await bot.send_message(message.from_user.id, f'Идентификатор товара: {ret[0]}\nОтзыв: {ret[1]}')
 
 
-async def get_product_price(product_id):
-    result_set = cur.execute('SELECT price FROM catalog WHERE product_id = ?', (product_id,)).fetchone()
-    if result_set:
-        return result_set[0]
-    else:
-        return None
-
-
 async def sql_add_command_cart(callback_query):
-    # user_id = callback_query.from_user.id
-    # product_id = callback_query.data.split()[1]
-    #
-    # cur.execute('SELECT * FROM cart WHERE user_id=?', (user_id,))
-    # cart = cur.fetchone()
-    # if not cart:
-    #     cur.execute('INSERT INTO cart (user_id, product_id, quantity, total_price) VALUES (?, ?, ?, ?)',
-    #                 (user_id, '', '', 0))
-    #     base.commit()
-    #
-    # cur.execute('SELECT * FROM cart WHERE user_id=?', (user_id,))
-    # cart = cur.fetchone()
-    # product_ids = cart[2].split(',')
-    # product_counts = cart[3].split(',')
-    # total_price = cart[4]
-    #
-    # if product_id in product_ids:
-    #     index = product_ids.index(product_id)
-    #     product_counts[index] = str(int(product_counts[index].replace(',', '.')) + 1)
-    # else:
-    #     product_ids.append(product_id)
-    #     product_counts.append('1')
-    #
-    # product_ids_str = ', '.join(product_ids)
-    # product_counts_str = ', '.join(product_counts)
-    # total_price += await get_product_price(product_id)
-    # cur.execute('UPDATE cart SET product_id=?, quantity=?, total_price=? WHERE user_id=?',
-    #             (product_ids_str, product_counts_str, total_price, user_id))
-    # base.commit()
-    # await bot.answer_callback_query(callback_query.id, text='Товар добавлен в корзину')
 
 
-# async def sql_read_cart(message):
-    # cart_items = cur.execute('SELECT * FROM cart').fetchall()
-    #
-    # if not cart_items:
-    #     await message.answer("Ваша корзина пуста.")
-    #     return
-    #
-    # total_items = 0
-    # total_price = 0
-    #
-    # cart_message = "Для очистки корзины используйте команду /empty\nВаша корзина:\n"
-    # for item in cart_items:
-    #     total_items += int(float(item[3].replace(',', '.')))
-    #     total_price += item[4] * int(float(item[3].replace(',', '.')))
-    #     cart_message += f"\n{item[1]} ({item[3]} шт.) - {item[4]} руб. за шт."
-    #
-    # cart_message += f"\n\nВсего товаров: {total_items}"
-    # cart_message += f"\nОбщая стоимость: {total_price} руб."
-    #
-    # inline_keyboard = InlineKeyboardMarkup()
-    # inline_keyboard.add(InlineKeyboardButton(text="Купить", callback_data="buy"))
-    # await message.answer(cart_message, reply_markup=inline_keyboard)
+async def sql_read_cart(message):
 
 
 async def empty_cart(message):

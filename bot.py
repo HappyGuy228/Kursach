@@ -61,7 +61,7 @@ async def keyboard_handler_menu(message: types.Message):
         case "🛒Корзина":
             await message.delete()
             await message.answer("Здесь будет корзина")
-            await sqlite_db.sql_read_cart(message)
+            # await sqlite_db.sql_read_cart(message)
         case "📝Заказы":
             await message.delete()
             await message.answer("Здесь будут заказы")
@@ -109,10 +109,10 @@ async def process_category(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
     await sqlite_db.sql_read_catalog(callback_query, category)
 
-
-@dp.callback_query_handler(Text('add'))
-async def add_cart(callback: types.CallbackQuery):
-    await sqlite_db.sql_add_command_cart(callback)
+# ЭТО ДЛЯ КОРЗИНЫ
+# @dp.callback_query_handler(Text(startswith='add'))
+# async def add_cart(callback: types.CallbackQuery):
+#     await sqlite_db.sql_add_command_cart(callback)
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
