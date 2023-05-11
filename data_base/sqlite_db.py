@@ -52,7 +52,7 @@ async def check_product_id(product_id):
 
 
 async def check_category(category_name):
-    result = cur.execute(f"SELECT * FROM category WHERE category_name = '{category_name}'").fetchone()
+    result = cur.execute(f"SELECT * FROM categories WHERE category_name = '{category_name}'").fetchone()
     if result is not None:
         return True
     else:
@@ -82,13 +82,13 @@ async def sql_delete_user(message):
 
 
 async def sql_read_catalog(callback_query, category):
-    result_set = cur.execute(f'SELECT * FROM catalog WHERE category = "{category}"').fetchall()
+    result_set = cur.execute(f'SELECT product_id, photo, name, size, price FROM catalog WHERE category = "{category}"').fetchall()
     for row in result_set:
         product_id, photo, name, size, price = row
         await bot.send_photo(callback_query.from_user.id, photo,
                              f'Идентификатор: {product_id}\nНазвание: {name}\nРазмер: {size}\nЦена: {price}')
         await bot.send_message(callback_query.from_user.id, text="***", reply_markup=InlineKeyboardMarkup().add(
-            InlineKeyboardButton(f'Добавить в корзину', callback_data=f'add {product_id}')))
+            InlineKeyboardButton('Добавить в корзину', callback_data='add')))
 
 
 async def sql_read_reviews(message):
@@ -134,7 +134,7 @@ async def sql_add_command_cart(callback_query):
     # cur.execute('UPDATE cart SET product_id=?, quantity=?, total_price=? WHERE user_id=?',
     #             (product_ids_str, product_counts_str, total_price, user_id))
     # base.commit()
-    await bot.answer_callback_query(callback_query.id, text='Товар добавлен в корзину')
+    # await bot.answer_callback_query(callback_query.id, text='Товар добавлен в корзину')
 
 
 # async def sql_read_cart(message):

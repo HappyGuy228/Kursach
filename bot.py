@@ -54,7 +54,7 @@ async def keyboard_handler_menu(message: types.Message):
     match message.text:
         case "📦Каталог":
             await message.delete()
-            await message.answer("Здесь будет каталог", reply_markup=keyboard)
+            await message.answer("Здесь находится каталог", reply_markup=keyboard)
         case "ℹ️Помощь":
             await message.delete()
             await message.answer(text=result, reply_markup=ReplyKeyboardRemove())
@@ -103,16 +103,16 @@ async def keyboard_handler_settings(message: types.Message):
             await message.answer('Вы вернулись в главное меню', reply_markup=kb_client_menu)
 
 
-@dp.callback_query_handler(lambda callback_query: callback_query.data in ['Категория 1', 'Категория 2', 'Категория 3'])
+@dp.callback_query_handler(lambda x: x.data and x.data in ['Сапоги', 'Ботинки', 'Туфли'])
 async def process_category(callback_query: types.CallbackQuery):
     category = callback_query.data
     await bot.answer_callback_query(callback_query.id)
     await sqlite_db.sql_read_catalog(callback_query, category)
 
 
-@dp.callback_query_handler(Text(startswith='add '))
+@dp.callback_query_handler(Text('add'))
 async def add_cart(callback: types.CallbackQuery):
-    await sqlite_db.add_to_cart(callback)
+    await sqlite_db.sql_add_command_cart(callback)
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
