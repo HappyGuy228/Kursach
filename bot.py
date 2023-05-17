@@ -57,21 +57,19 @@ async def keyboard_handler_menu(message: types.Message):
             await message.answer("Здесь находится каталог", reply_markup=keyboard)
         case "ℹ️Помощь":
             await message.delete()
-            await message.answer(text=result, reply_markup=ReplyKeyboardRemove())
+            await message.answer(text=result)
         case "🛒Корзина":
             await message.delete()
-            await message.answer("Здесь будет корзина")
             await sqlite_db.sql_read_cart(message)
         case "📝История заказов":
             await message.delete()
-            await message.answer("Здесь будут заказы")
             await sqlite_db.sql_read_orders(message)
         case "⚙️Настройки":
             await message.delete()
-            await message.answer("Здесь будут настройки", reply_markup=kb_client_settings)
+            await message.answer("Здесь располагаются настройки", reply_markup=kb_client_settings)
         case "💬Отзывы":
             await message.delete()
-            await message.answer("Здесь будут отзывы", reply_markup=kb_client_review)
+            await message.answer("Вы можете посмотреть отзывы или написать свой", reply_markup=kb_client_review)
 
 
 @dp.message_handler(lambda message: message.text in ['Посмотреть отзывы', 'Написать отзыв', 'Назад'])

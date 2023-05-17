@@ -18,7 +18,7 @@ def sql_start():
     base.execute('CREATE TABLE IF NOT EXISTS reviews(product_id INT PRIMARY KEY, review LONGTEXT)')
     base.execute('CREATE TABLE IF NOT EXISTS categories(category_id INT PRIMARY KEY, category_name TEXT)')
     base.execute('CREATE TABLE IF NOT EXISTS cart(id INTEGER PRIMARY KEY, user_id INT, product_id INT, product_name TEXT)')
-    base.execute('CREATE TABLE IF NOT EXISTS history_orders(order_number INT PRIMARY KEY AUTOINCREMENT, user_id INT, current_date DATE, quantity INT, total_price INT)')
+    base.execute('CREATE TABLE IF NOT EXISTS history_orders(order_number INTEGER PRIMARY KEY AUTOINCREMENT, user_id INT, current_date DATE, quantity INT, total_price INT)')
     base.commit()
 
 
