@@ -46,10 +46,10 @@ async def process_start_command(message: types.Message):
 
 @dp.message_handler(commands='empty')
 async def cart_empty(message: types.Message):
-    await sqlite_db.empty_cart(message)
+    await sqlite_db.empty_cart1(message)
 
 
-@dp.message_handler(lambda message: message.text in ['📦Каталог', 'ℹ️Помощь', '🛒Корзина', '📝Заказы', '⚙️Настройки', '💬Отзывы'])
+@dp.message_handler(lambda message: message.text in ['📦Каталог', 'ℹ️Помощь', '🛒Корзина', '📝История заказов', '⚙️Настройки', '💬Отзывы'])
 async def keyboard_handler_menu(message: types.Message):
     match message.text:
         case "📦Каталог":
@@ -62,9 +62,10 @@ async def keyboard_handler_menu(message: types.Message):
             await message.delete()
             await message.answer("Здесь будет корзина")
             await sqlite_db.sql_read_cart(message)
-        case "📝Заказы":
+        case "📝История заказов":
             await message.delete()
             await message.answer("Здесь будут заказы")
+            await sqlite_db.sql_read_orders(message)
         case "⚙️Настройки":
             await message.delete()
             await message.answer("Здесь будут настройки", reply_markup=kb_client_settings)
@@ -109,11 +110,18 @@ async def process_category(callback_query: types.CallbackQuery):
     await sqlite_db.sql_read_catalog(callback_query, category)
 
 
-# # ЭТО ДЛЯ КОРЗИНЫ
 @dp.callback_query_handler(Text(startswith='add: '))
 async def add_cart(callback: types.CallbackQuery):
     await sqlite_db.add_to_cart(callback)
     await callback.answer()
+
+
+@dp.callback_query_handler(Text('buy'))
+async def add_order(callback: types.CallbackQuery):
+    await sqlite_db.add_to_orders(callback)
+    await sqlite_db.empty_cart2(callback)
+    await callback.answer()
+
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True, on_startup=on_startup)

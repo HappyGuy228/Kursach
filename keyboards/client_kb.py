@@ -4,7 +4,7 @@ b1 = KeyboardButton('📦Каталог')
 b2 = KeyboardButton('⚙️Настройки')
 b3 = KeyboardButton('ℹ️Помощь')
 b4 = KeyboardButton('🛒Корзина')
-b5 = KeyboardButton('📝Заказы')
+b5 = KeyboardButton('📝История заказов')
 b6 = KeyboardButton('💬Отзывы')
 
 kb_client_menu = ReplyKeyboardMarkup(resize_keyboard=True)

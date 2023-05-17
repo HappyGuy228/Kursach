@@ -12,7 +12,6 @@ class FSM_review(StatesGroup):
     review = State()
 
 
-# @dp.message_handler(commands='Написать отзыв', state=None)
 async def cm_start_review(message: types.Message):
     await FSM_review.product_id.set()
     await message.reply('Введите ID товара, на который хотите написать отзыв.')
@@ -26,7 +25,6 @@ async def cancel_handler_client_review(message: types.Message, state: FSMContext
     await message.reply('OK')
 
 
-# @dp.message_handler(state=FSM_review.product_id)
 async def load_product_id(message: types.Message, state: FSMContext):
     product_id = message.text
     if not await sqlite_db.check_product_id(product_id):
@@ -38,7 +36,6 @@ async def load_product_id(message: types.Message, state: FSMContext):
     await message.reply("Напишите отзыв")
 
 
-# @dp.message_handler(state=FSM_review.review)
 async def load_review(message: types.Message, state: FSMContext):
     async with state.proxy() as data2:
         data2['review'] = message.text
@@ -46,7 +43,6 @@ async def load_review(message: types.Message, state: FSMContext):
     await state.finish()
 
 
-##################################
 class FSM_user(StatesGroup):
     user_id = State()
     name = State()
@@ -61,11 +57,9 @@ async def cm_start_user(message: types.Message):
         await message.reply("Пользователь с вашим ID уже существует.")
         return
     await FSM_user.user_id.set()
+    await message.reply("Для начала регистрации напечатайте любой символ. Для отмены процесса регистрации используйте команду /отмена.")
 
 
-# Выход из состояний
-# @dp.message_handler(state="*", commands='отмена')
-# @dp.message_handler(Text(equals='отмена', ignore_case=True), state="*")
 async def cancel_handler_client_user(message: types.Message, state: FSMContext):
     current_state = await state.get_state()
     if current_state is None:
@@ -74,7 +68,6 @@ async def cancel_handler_client_user(message: types.Message, state: FSMContext):
     await message.reply('OK')
 
 
-# @dp.message_handler(state=FSMAdmin.name)
 async def load_user_id(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['user_id'] = ID
@@ -82,7 +75,6 @@ async def load_user_id(message: types.Message, state: FSMContext):
     await message.reply("Введите ваше ФИО")
 
 
-# @dp.message_handler(state=FSMAdmin.name)
 async def load_name(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['name'] = message.text
@@ -90,7 +82,6 @@ async def load_name(message: types.Message, state: FSMContext):
     await message.reply("Введите ваш номер")
 
 
-# @dp.message_handler(state=FSMAdmin.phone)
 async def load_number(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['phone'] = int(message.text)
@@ -98,12 +89,12 @@ async def load_number(message: types.Message, state: FSMContext):
     await message.reply("Укажите ваш адрес")
 
 
-# @dp.message_handler(state=FSMAdmin.address)
 async def load_address(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['address'] = message.text
     await sqlite_db.sql_add_command_user(state)
     await state.finish()
+    await message.reply("Регистрация завершена")
 
 
 def register_handlers_client_review(dp: Dispatcher):

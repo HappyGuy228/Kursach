@@ -2,6 +2,7 @@ import sqlite3 as sq
 from create_bot import bot
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram import types
+from datetime import datetime
 
 ID = None
 
@@ -17,6 +18,7 @@ def sql_start():
     base.execute('CREATE TABLE IF NOT EXISTS reviews(product_id INT PRIMARY KEY, review LONGTEXT)')
     base.execute('CREATE TABLE IF NOT EXISTS categories(category_id INT PRIMARY KEY, category_name TEXT)')
     base.execute('CREATE TABLE IF NOT EXISTS cart(id INTEGER PRIMARY KEY, user_id INT, product_id INT, product_name TEXT)')
+    base.execute('CREATE TABLE IF NOT EXISTS history_orders(order_number INT PRIMARY KEY AUTOINCREMENT, user_id INT, current_date DATE, quantity INT, total_price INT)')
     base.commit()
 
 
@@ -79,10 +81,6 @@ async def get_product_name(product_id):
 
 
 async def sql_read_user(message):
-    # result_set = cur.execute(f"SELECT * FROM user WHERE user_id = '{ID}'").fetchone()
-    # for row in result_set:
-    #     user_id, name, phone, address = row
-    #     await bot.send_message(ID, text=f'ID: {user_id}\nИмя: {name}\nНомер: {phone}\nАдрес: {address}')
     for ret in cur.execute(f"SELECT * FROM user WHERE user_id = '{message.from_user.id}'").fetchall():
         await bot.send_message(message.from_user.id, f'Имя: {ret[1]}\nТелефон: {ret[2]}\nАдрес: {ret[3]}')
 
@@ -119,16 +117,15 @@ async def get_product_price(product_id):
 async def add_to_cart(callback_query: types.CallbackQuery):
     user_id = callback_query.from_user.id
     product_id = int(callback_query.data.split(':')[1])
-    product_name = await get_product_name(product_id)  # Здесь вы должны реализовать логику получения названия товара из каталога
+    product_name = await get_product_name(product_id)
 
-    # Добавляем товар в корзину
     cur.execute('''
             INSERT INTO cart (user_id, product_id, product_name)
             VALUES (?, ?, ?)
         ''', (user_id, product_id, product_name))
     base.commit()
 
-    await bot.send_message(user_id, f'Товар "{product_name}" добавлен в корзину!')
+    await callback_query.answer(f'Товар "{product_name}" добавлен в корзину!', show_alert=True)
 
 
 async def sql_read_cart(message):
@@ -145,9 +142,6 @@ async def sql_read_cart(message):
     for item in cart_items:
         while total_items < item[0]:
             total_items += 1
-        # total_items += float(item[3].replace(',', '.'))
-        # total_price += item[4] * float(item[3].replace(',', '.'))
-        # cart_message += f"\n{item[2]} ({item[3]} шт.) - {item[4]} руб. за шт."
         price = await get_product_price(product_id=item[2])
         total_price += price
         cart_message += f'\n{item[3]} - {price} руб.'
@@ -156,12 +150,50 @@ async def sql_read_cart(message):
     cart_message += f"\nОбщая стоимость: {total_price} руб."
 
     inline_buy = InlineKeyboardMarkup()
-    inline_buy.add(InlineKeyboardButton(text="Купить", callback_data="buy"))
+    inline_buy.add(InlineKeyboardButton(text="Оплатить", callback_data="buy"))
     await message.answer(cart_message, reply_markup=inline_buy)
 
 
-async def empty_cart(message):
+async def add_to_orders(callback_query: types.CallbackQuery):
+    user_id = callback_query.from_user.id
+    quantity = 0
+    total_price = 0
+    current_date = datetime.now().date()
+
+    cart_items = cur.execute('SELECT * FROM cart').fetchall()
+
+    for item in cart_items:
+        while quantity < item[0]:
+            quantity += 1
+        price = await get_product_price(product_id=item[2])
+        total_price += price
+
+    cur.execute('''
+                INSERT INTO history_orders (user_id, current_date, quantity, total_price)
+                VALUES (?, ?, ?, ?)
+            ''', (user_id, current_date, quantity, total_price))
+    base.commit()
+
+    await callback_query.answer('Заказ оплачен', show_alert=True)
+
+
+async def sql_read_orders(message):
+    orders = cur.execute('SELECT order_number, current_date, quantity, total_price FROM history_orders').fetchall()
+
+    for order in orders:
+        order_number, current_date, quantity, total_price = order
+        await bot.send_message(message.from_user.id,
+                             f'Дата заказа: {current_date}\nНомер заказа: {order_number}\nКоличество товаров: {quantity}\nОбщая стоимость: {total_price}')
+
+
+async def empty_cart1(message):
     user_id = message.from_user.id
     cur.execute('DELETE FROM cart WHERE user_id=?', (user_id,))
     base.commit()
     await message.answer("Корзина очищена")
+
+
+async def empty_cart2(callback_query: types.CallbackQuery):
+    user_id = callback_query.from_user.id
+    cur.execute('DELETE FROM cart WHERE user_id=?', (user_id,))
+    base.commit()
