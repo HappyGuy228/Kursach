@@ -4,6 +4,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher.filters import Text
 from data_base import sqlite_db
 from create_bot import bot, dp
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 ID = None
 
@@ -20,8 +21,9 @@ class FSMAdmin_product(StatesGroup):
 async def make_changes_command(message: types.Message):
     global ID
     ID = message.from_user.id
-    await bot.send_message(message.from_user.id, 'Вы модератор. Теперь вы можете занести товары или новые категории. '
-                                                 'Введите команду /Загрузить_товар для загрузки товара или /Категория для добавления новой категории.')
+    await bot.send_message(message.from_user.id, 'Вы модератор. Теперь вы можете занести товары или новые категории, а также их удалить.'
+                                                 'Введите команду /Загрузить_товар для загрузки товара или /Категория для добавления новой категории.'
+                                                 'Введите команду /Удалить_товар для удаления товара или /Удалить_категорию для удаления категории.')
     await message.delete()
 
 
@@ -121,6 +123,43 @@ async def set_category(message: types.Message, state: FSMContext):
         await message.reply("Категория добавлена!")
 
 
+@dp.message_handler(commands='Удалить_товар')
+async def delete_product(message: types.Message):
+    if message.from_user.id == ID:
+        read = await sqlite_db.sql_read_catalog1()
+        for ret in read:
+            product_id, photo, name, size, price = ret
+            await bot.send_photo(message.from_user.id, photo,
+                                 f'Идентификатор: {product_id}\nНазвание: {name}\nРазмер: {size}\nЦена: {price}')
+            await bot.send_message(message.from_user.id, text="***", reply_markup=InlineKeyboardMarkup().add(
+                InlineKeyboardButton('Удалить', callback_data=f'delete pr {product_id}')))
+
+
+@dp.callback_query_handler(Text(startswith='delete pr '))
+async def delete_product(callback: types.CallbackQuery):
+    await sqlite_db.sql_delete_product(callback.data.replace('delete pr ', ''))
+    await callback.answer('Товар удален!', show_alert=True)
+    await callback.answer()
+
+
+@dp.message_handler(commands='Удалить_категорию')
+async def delete_product(message: types.Message):
+    if message.from_user.id == ID:
+        read = await sqlite_db.sql_read_categories()
+        for ret in read:
+            category_id, category_name = ret
+            await bot.send_message(message.from_user.id, f'Идентификатор: {category_id}\nНазвание: {category_name}')
+            await bot.send_message(message.from_user.id, text="***", reply_markup=InlineKeyboardMarkup().add(
+                InlineKeyboardButton('Удалить', callback_data=f'delete cat {category_id}')))
+
+
+@dp.callback_query_handler(Text(startswith='delete cat '))
+async def delete_product(callback: types.CallbackQuery):
+    await sqlite_db.sql_delete_category(callback.data.replace('delete cat ', ''))
+    await callback.answer('Категория удалена!', show_alert=True)
+    await callback.answer()
+
+
 def register_handlers_admin1(dp: Dispatcher):
     dp.register_message_handler(make_changes_command, commands=['moderator'], is_chat_admin=True)
     dp.register_message_handler(cm_start, commands=['Загрузить_товар'], state=None)
@@ -139,3 +178,4 @@ def register_handlers_admin2(dp: Dispatcher):
     dp.register_message_handler(cm_start1, commands=['Категория'], state=None)
     dp.register_message_handler(set_id, state=FSMAdmin_category.category_id)
     dp.register_message_handler(set_category, state=FSMAdmin_category.category)
+

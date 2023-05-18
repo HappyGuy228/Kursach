@@ -85,9 +85,29 @@ async def sql_read_user(message):
         await bot.send_message(message.from_user.id, f'Имя: {ret[1]}\nТелефон: {ret[2]}\nАдрес: {ret[3]}')
 
 
+async def sql_read_categories():
+    result_set = cur.execute('SELECT * FROM categories').fetchall()
+    return result_set
+
+
 async def sql_delete_user(message):
     cur.execute(f'DELETE FROM user WHERE user_id={message.from_user.id}')
     base.commit()
+
+
+async def sql_delete_product(product_id):
+    cur.execute(f'DELETE FROM catalog WHERE product_id = ?', (product_id,))
+    base.commit()
+
+
+async def sql_delete_category(category_id):
+    cur.execute(f'DELETE FROM categories WHERE category_id = ?', (category_id,))
+    base.commit()
+
+
+async def sql_read_catalog1():
+    result_set = cur.execute('SELECT product_id, photo, product_name, size, price FROM catalog').fetchall()
+    return result_set
 
 
 async def sql_read_catalog(callback_query, category):
