@@ -15,7 +15,7 @@ def sql_start():
         print('Data base connected OK!')
     base.execute('CREATE TABLE IF NOT EXISTS user(user_id INT PRIMARY KEY, user_name TEXT, phone TEXT, address TEXT)')
     base.execute('CREATE TABLE IF NOT EXISTS catalog(product_id INT PRIMARY KEY, category TEXT, photo TEXT, product_name TEXT, size TEXT, price INT)')
-    base.execute('CREATE TABLE IF NOT EXISTS reviews(product_id INT PRIMARY KEY, review LONGTEXT)')
+    base.execute('CREATE TABLE IF NOT EXISTS reviews(review_id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INT, product_id INT, review LONGTEXT)')
     base.execute('CREATE TABLE IF NOT EXISTS categories(category_id INT PRIMARY KEY, category_name TEXT)')
     base.execute('CREATE TABLE IF NOT EXISTS cart(id INTEGER PRIMARY KEY, user_id INT, product_id INT, product_name TEXT)')
     base.execute('CREATE TABLE IF NOT EXISTS history_orders(order_number INTEGER PRIMARY KEY AUTOINCREMENT, user_id INT, current_date DATE, quantity INT, total_price INT)')
@@ -36,7 +36,7 @@ async def sql_add_command_catalog(state):
 
 async def sql_add_command_review(state):
     async with state.proxy() as data2:
-        cur.execute('INSERT INTO reviews VALUES (?, ?)', tuple(data2.values()))
+        cur.execute('INSERT INTO reviews (user_id, product_id, review) VALUES (?, ?, ?)', tuple(data2.values()))
         base.commit()
 
 
@@ -121,7 +121,7 @@ async def sql_read_catalog(callback_query, category):
 
 
 async def sql_read_reviews(message):
-    for ret in cur.execute('SELECT * FROM reviews').fetchall():
+    for ret in cur.execute('SELECT product_id, review FROM reviews').fetchall():
         await bot.send_message(message.from_user.id, f'Идентификатор товара: {ret[0]}\nОтзыв: {ret[1]}')
 
 

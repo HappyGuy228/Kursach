@@ -22,8 +22,8 @@ async def make_changes_command(message: types.Message):
     global ID
     ID = message.from_user.id
     await bot.send_message(message.from_user.id, 'Вы модератор. Теперь вы можете занести товары или новые категории, а также их удалить.'
-                                                 'Введите команду /Загрузить_товар для загрузки товара или /Категория для добавления новой категории.'
-                                                 'Введите команду /Удалить_товар для удаления товара или /Удалить_категорию для удаления категории.')
+                                                 ' Введите команду /Загрузить_товар для загрузки товара или /Категория для добавления новой категории.'
+                                                 ' Введите команду /Удалить_товар для удаления товара или /Удалить_категорию для удаления категории.')
     await message.delete()
 
 
@@ -176,6 +176,8 @@ def register_handlers_admin1(dp: Dispatcher):
 def register_handlers_admin2(dp: Dispatcher):
     dp.register_message_handler(make_changes_command, commands=['moderator'], is_chat_admin=True)
     dp.register_message_handler(cm_start1, commands=['Категория'], state=None)
+    dp.register_message_handler(cancel_handler_admin_goods, state="*", commands='отмена')
+    dp.register_message_handler(cancel_handler_admin_goods, Text(equals='отмена', ignore_case=True), state="*")
     dp.register_message_handler(set_id, state=FSMAdmin_category.category_id)
     dp.register_message_handler(set_category, state=FSMAdmin_category.category)
 

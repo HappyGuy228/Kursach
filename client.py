@@ -8,13 +8,14 @@ ID = None
 
 
 class FSM_review(StatesGroup):
+    user_id = State()
     product_id = State()
     review = State()
 
 
 async def cm_start_review(message: types.Message):
-    await FSM_review.product_id.set()
-    await message.reply('Введите ID товара, на который хотите написать отзыв.')
+    await FSM_review.user_id.set()
+    await message.reply('Введите любой символ для продолжения написания отзыва.')
 
 
 async def cancel_handler_client_review(message: types.Message, state: FSMContext):
@@ -23,6 +24,13 @@ async def cancel_handler_client_review(message: types.Message, state: FSMContext
         return
     await state.finish()
     await message.reply('OK')
+
+
+async def load_id(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['user_id'] = ID
+    await FSM_review.next()
+    await message.reply('Введите ID товара, на который хотите написать отзыв.')
 
 
 async def load_product_id(message: types.Message, state: FSMContext):
@@ -40,6 +48,7 @@ async def load_review(message: types.Message, state: FSMContext):
     async with state.proxy() as data2:
         data2['review'] = message.text
     await sqlite_db.sql_add_command_review(state)
+    await message.reply("Спасибо Вам за отзыв!")
     await state.finish()
 
 
@@ -101,6 +110,7 @@ def register_handlers_client_review(dp: Dispatcher):
     dp.register_message_handler(cm_start_review, lambda message: message.text == 'Написать отзыв', state=None)
     dp.register_message_handler(cancel_handler_client_review, state="*", commands='отмена')
     dp.register_message_handler(cancel_handler_client_review, Text(equals='отмена', ignore_case=True), state="*")
+    dp.register_message_handler(load_id, state=FSM_review.user_id)
     dp.register_message_handler(load_product_id, state=FSM_review.product_id)
     dp.register_message_handler(load_review, state=FSM_review.review)
 
